@@ -1,8 +1,11 @@
 // From: https://caballerocoll.com/blog/bevy-chess-tutorial/
 use bevy::prelude::*;
+use bevy_mod_picking::*;
 
-mod startup_systems;
-use startup_systems::*;
+mod pieces;
+use pieces::*;
+mod board;
+use board::*;
 
 fn main() {
     App::build()
@@ -14,6 +17,8 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(PickingPlugin)
+        .add_plugin(DebugPickingPlugin)
         .add_startup_system(setup.system())
         .add_startup_system(create_board.system())
         .add_startup_system(create_pieces.system())
@@ -30,7 +35,8 @@ fn setup(mut commands: Commands) {
             )),
             ..Default::default()
         })
-        // Light
+        .with(PickSource::default())
+        //Light
         .spawn(LightComponents {
             transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
             ..Default::default()
