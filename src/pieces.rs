@@ -4,19 +4,20 @@ pub struct PiecesPlugin;
 
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_startup_system(create_pieces.system());
+        app.add_startup_system(create_pieces.system())
+            .add_system(move_pieces.system());
     }
 }
 
 // TODO Maybe split piece structs into it's own file
 #[derive(Clone, Copy, PartialEq)]
-enum PieceColor {
+pub enum PieceColor {
     White,
     Black,
 }
 
 #[derive(Clone, Copy, PartialEq)]
-enum PieceType {
+pub enum PieceType {
     King,
     Queen,
     Bishop,
@@ -26,12 +27,21 @@ enum PieceType {
 }
 
 #[derive(Clone, Copy)]
-struct Piece {
+pub struct Piece {
     pub color: PieceColor,
     pub piece_type: PieceType,
     // Current position
     pub x: u8,
     pub y: u8,
+}
+
+fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &Piece)>) {
+    for (mut transform, piece) in query.iter_mut() {
+        let direction = Vec3::new(piece.x as f32, 0.0, piece.y as f32) - transform.translation;
+        if direction.length() > 0.1 {
+            transform.translation += direction.normalize() * time.delta_seconds;
+        }
+    }
 }
 
 fn create_pieces(

@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Group, PickState, PickableMesh};
 
+use crate::pieces::Piece;
+
 pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.init_resource::<SelectedSquare>()
+            .init_resource::<SelectedPiece>()
             .add_startup_system(create_board.system())
             .add_system(select_square.system())
             .add_system(color_squares.system());
@@ -27,21 +30,51 @@ struct SelectedSquare {
     entity: Option<Entity>,
 }
 
+#[derive(Default)]
+struct SelectedPiece {
+    entity: Option<Entity>,
+}
+
 fn select_square(
     pick_state: Res<PickState>,
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
+    mut selected_piece: ResMut<SelectedPiece>,
+    squares_query: Query<&Square>,
+    mut pieces_query: Query<(Entity, &mut Piece)>,
 ) {
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
     }
 
-    selected_square.entity = if let Some((entity, _intersection)) = pick_state.top(Group::default())
-    {
-        Some(*entity)
-    } else {
-        None
-    };
+    if let Some((square_entity, _intersection)) = pick_state.top(Group::default()) {
+        if let Ok(square) = squares_query.get(*square_entity) {
+            selected_square.entity = Some(*square_entity);
+
+            if let Some(selected_piece_entity) = selected_piece.entity {
+                // If you do find a selected piece, then update it's position.
+                if let Ok((_piece_entity, mut piece)) = pieces_query.get_mut(selected_piece_entity)
+                {
+                    piece.x = square.x;
+                    piece.y = square.y;
+                }
+                selected_square.entity = None;
+                selected_piece.entity = None;
+            } else {
+                // If there is no piece previously selected, select the current one.
+                for (piece_entity, piece) in pieces_query.iter_mut() {
+                    if piece.x == square.x && piece.y == square.y {
+                        selected_piece.entity = Some(piece_entity);
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Deselect everything if player clicks outside the board.
+            selected_square.entity = None;
+            selected_piece.entity = None;
+        }
+    }
 }
 
 fn color_squares(
