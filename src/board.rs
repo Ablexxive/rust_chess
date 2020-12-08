@@ -36,6 +36,7 @@ struct SelectedPiece {
 }
 
 fn select_square(
+    mut commands: Commands,
     pick_state: Res<PickState>,
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
@@ -52,11 +53,26 @@ fn select_square(
             selected_square.entity = Some(*square_entity);
 
             if let Some(selected_piece_entity) = selected_piece.entity {
-                // If you do find a selected piece, then update it's position.
+                let possible_enemy_pieces_vec: Vec<(Entity, Piece)> = pieces_query
+                    .iter_mut()
+                    .map(|(entity, piece)| (entity, *piece))
+                    .collect();
                 let pieces_vec = pieces_query.iter_mut().map(|(_, piece)| *piece).collect();
+
+                // If you do find a selected piece, then update it's position.
                 if let Ok((_piece_entity, mut piece)) = pieces_query.get_mut(selected_piece_entity)
                 {
                     if piece.is_move_valid((square.x, square.y), pieces_vec) {
+                        for (entity, other_piece) in possible_enemy_pieces_vec {
+                            // If we find a piece on the target that is of the opposite color, despawn
+                            // it.
+                            if other_piece.x == square.x
+                                && other_piece.y == square.y
+                                && other_piece.color != piece.color
+                            {
+                                commands.despawn_recursive(entity);
+                            }
+                        }
                         piece.x = square.x;
                         piece.y = square.y;
                     }
