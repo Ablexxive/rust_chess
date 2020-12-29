@@ -44,7 +44,7 @@ struct SelectedPiece {
 }
 
 fn select_square(
-    mut commands: Commands,
+    commands: &mut Commands,
     pick_state: Res<PickState>,
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
@@ -153,7 +153,7 @@ fn color_squares(
 }
 
 fn create_board(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -164,7 +164,7 @@ fn create_board(
     for idx in 0..8 {
         for idy in 0..8 {
             commands
-                .spawn(PbrComponents {
+                .spawn(PbrBundle {
                     mesh: square_mesh_handle.clone(),
                     material: if (idx + idy + 1) % 2 == 0 {
                         materials.add(Color::rgb(1.0, 0.9, 0.9).into())

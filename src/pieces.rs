@@ -150,7 +150,7 @@ fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &Piece)>) {
     for (mut transform, piece) in query.iter_mut() {
         let direction = Vec3::new(piece.x as f32, 0.0, piece.y as f32) - transform.translation;
         if direction.length() > 0.1 {
-            transform.translation += direction.normalize() * time.delta_seconds;
+            transform.translation += direction.normalize() * time.delta_seconds();
         }
     }
 }
@@ -218,7 +218,7 @@ fn is_path_empty(begin: (u8, u8), end: (u8, u8), pieces: &Vec<Piece>) -> bool {
 }
 
 fn create_pieces(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -246,14 +246,14 @@ fn create_pieces(
 
     // White Side
     spawn_rook(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         rook_handle.clone(),
         (0, 0),
     );
     spawn_knight(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         knight_1_handle.clone(),
@@ -261,21 +261,21 @@ fn create_pieces(
         (0, 1),
     );
     spawn_bishop(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         bishop_handle.clone(),
         (0, 2),
     );
     spawn_queen(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         queen_handle.clone(),
         (0, 3),
     );
     spawn_king(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         king_handle.clone(),
@@ -283,14 +283,14 @@ fn create_pieces(
         (0, 4),
     );
     spawn_bishop(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         bishop_handle.clone(),
         (0, 5),
     );
     spawn_knight(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         knight_1_handle.clone(),
@@ -298,7 +298,7 @@ fn create_pieces(
         (0, 6),
     );
     spawn_rook(
-        &mut commands,
+        commands,
         white_material.clone(),
         PieceColor::White,
         rook_handle.clone(),
@@ -307,7 +307,7 @@ fn create_pieces(
 
     for idx in 0..8 {
         spawn_pawn(
-            &mut commands,
+            commands,
             white_material.clone(),
             PieceColor::White,
             pawn_handle.clone(),
@@ -317,14 +317,14 @@ fn create_pieces(
 
     // Black Side
     spawn_rook(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         rook_handle.clone(),
         (7, 0),
     );
     spawn_knight(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         knight_1_handle.clone(),
@@ -332,21 +332,21 @@ fn create_pieces(
         (7, 1),
     );
     spawn_bishop(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         bishop_handle.clone(),
         (7, 2),
     );
     spawn_queen(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         queen_handle.clone(),
         (7, 3),
     );
     spawn_king(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         king_handle.clone(),
@@ -354,14 +354,14 @@ fn create_pieces(
         (7, 4),
     );
     spawn_bishop(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         bishop_handle.clone(),
         (7, 5),
     );
     spawn_knight(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         knight_1_handle.clone(),
@@ -369,7 +369,7 @@ fn create_pieces(
         (7, 6),
     );
     spawn_rook(
-        &mut commands,
+        commands,
         black_material.clone(),
         PieceColor::Black,
         rook_handle.clone(),
@@ -378,7 +378,7 @@ fn create_pieces(
 
     for idx in 0..8 {
         spawn_pawn(
-            &mut commands,
+            commands,
             black_material.clone(),
             PieceColor::Black,
             pawn_handle.clone(),
@@ -397,7 +397,7 @@ fn spawn_king(
 ) {
     commands
         // Spawn parent entity
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -413,7 +413,7 @@ fn spawn_king(
         })
         // Add children to the parent
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh: mesh.clone(),
                 material: material.clone(),
                 transform: {
@@ -423,7 +423,7 @@ fn spawn_king(
                 },
                 ..Default::default()
             });
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh: mesh_cross.clone(),
                 material: material.clone(),
                 transform: {
@@ -446,7 +446,7 @@ fn spawn_knight(
 ) {
     commands
         // Spawn parent entity
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -462,7 +462,7 @@ fn spawn_knight(
         })
         // Add children to the parent
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh: mesh_1,
                 material: material.clone(),
                 transform: {
@@ -472,7 +472,7 @@ fn spawn_knight(
                 },
                 ..Default::default()
             });
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh: mesh_2,
                 material,
                 transform: {
@@ -493,7 +493,7 @@ fn spawn_queen(
     position: (u8, u8),
 ) {
     commands
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -508,7 +508,7 @@ fn spawn_queen(
             y: position.1,
         })
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh,
                 material,
                 transform: {
@@ -529,7 +529,7 @@ fn spawn_bishop(
     position: (u8, u8),
 ) {
     commands
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -544,7 +544,7 @@ fn spawn_bishop(
             y: position.1,
         })
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh,
                 material,
                 transform: {
@@ -565,7 +565,7 @@ fn spawn_rook(
     position: (u8, u8),
 ) {
     commands
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -580,7 +580,7 @@ fn spawn_rook(
             y: position.1,
         })
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh,
                 material,
                 transform: {
@@ -601,7 +601,7 @@ fn spawn_pawn(
     position: (u8, u8),
 ) {
     commands
-        .spawn(PbrComponents {
+        .spawn(PbrBundle {
             transform: Transform::from_translation(Vec3::new(
                 position.0 as f32,
                 0.0,
@@ -616,7 +616,7 @@ fn spawn_pawn(
             y: position.1,
         })
         .with_children(|parent| {
-            parent.spawn(PbrComponents {
+            parent.spawn(PbrBundle {
                 mesh,
                 material,
                 transform: {
